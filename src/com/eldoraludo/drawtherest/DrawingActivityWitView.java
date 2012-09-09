@@ -15,6 +15,7 @@ import android.graphics.Path;
 import android.graphics.Paint.Style;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -76,6 +77,13 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 			}
 		});
 
+		final Button restaurer = (Button) findViewById(R.id.restaurer);
+		restaurer.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				actionButton(restaurer);
+			}
+		});
+
 	}
 
 	private void setCurrentPaint() {
@@ -115,7 +123,8 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 						+ " " + motionEvent.getY());
 			}
 		} else {
-			if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+			if (motionEvent.getAction() == MotionEvent.ACTION_DOWN
+					|| motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
 				currentDrawingPoint = new DrawingPoint();
 				Paint qc = new Paint(currentPaint);
 				qc.setStyle(Style.FILL);
@@ -125,7 +134,7 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 
 				Log.i("DrawingActivity - onTouch ACTION_DOWN",
 						motionEvent.getX() + " " + motionEvent.getY());
-			//	drawView.addDrawingPoint(currentDrawingPoint);
+				drawView.addDrawingPoint(currentDrawingPoint);
 
 			}
 		}
@@ -144,7 +153,7 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 			}
 			break;
 		case R.id.boutonNouvellePartie:
-			// drawingSurface.resetImage();
+			drawView.resetImage();
 			break;
 		case R.id.colorRedBtn:
 			currentPaint = new Paint();
@@ -195,8 +204,11 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 					alertDialog.show();
 				}
 			};
-			// new ExportBitmapToFile(this, saveHandler,
-			// drawView.getBitmap()).execute();
+			new ExportBitmapToFile(this, saveHandler, drawView.getBitmap())
+					.execute();
+			break;
+		case R.id.restaurer:
+			drawView.restaurer();
 			break;
 		}
 	}
@@ -219,14 +231,9 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 				if (!APP_FILE_PATH.exists()) {
 					APP_FILE_PATH.mkdirs();
 				}
-				// TODO
-				// http://developer.android.com/guide/topics/data/data-storage.html#filesExternal
-				// TODO
-				// http://stackoverflow.com/questions/4751609/writing-to-the-internal-private-storage-in-android-updated-2-6-12
-				// final FileOutputStream out = new FileOutputStream(new File(
-				// APP_FILE_PATH + "/myAwesomeDrawing.png"));
-				FileOutputStream out = openFileOutput("myAwesomeDrawing.png",
-						Context.MODE_PRIVATE);
+				File file = new File(Environment.getExternalStorageDirectory()
+						.toString(), "external_sd/Temp/myAwesomeDrawing.png");
+				FileOutputStream out = new FileOutputStream(file);
 				nBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
 				out.flush();
 				out.close();
@@ -234,7 +241,6 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			// mHandler.post(completeRunnable);
 			return false;
 		}
 

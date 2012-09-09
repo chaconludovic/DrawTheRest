@@ -18,6 +18,13 @@
             android:layout_height="wrap_content"
             android:text="Nouvelle partie" />
 
+        <Button
+            android:id="@+id/restaurer"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button" />
+
         <LinearLayout
             android:id="@+id/LinearLayoutToDraw"
             android:layout_width="match_parent"
