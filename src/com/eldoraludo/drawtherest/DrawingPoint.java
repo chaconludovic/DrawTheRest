@@ -8,4 +8,5 @@ public class DrawingPoint {
 	public Paint paint;
 	public float x;
 	public float y;
+	
 }

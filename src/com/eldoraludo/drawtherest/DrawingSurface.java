@@ -10,152 +10,64 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 public class DrawingSurface extends SurfaceView implements
 		SurfaceHolder.Callback {
 	private Boolean _run = false;
-	protected DrawThread thread;
+	// protected DrawThread thread;
 	private Bitmap mBitmap;
 	private int stylePen = 0;
+	private SurfaceHolder mSurfaceHolder;
+	private List<DrawingPath> mDrawingPaths;
+	private List<DrawingPoint> mDrawingPoints;
+	private Canvas canvas;
 
 	public DrawingSurface(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		getHolder().addCallback(this);
-		thread = new DrawThread(getHolder(), this);
+		this.setBackgroundColor(Color.WHITE);
+
+		mSurfaceHolder = getHolder();
+		mDrawingPaths = Collections
+				.synchronizedList(new ArrayList<DrawingPath>());
+		mDrawingPoints = Collections
+				.synchronizedList(new ArrayList<DrawingPoint>());
+		// canvas = mSurfaceHolder.lockCanvas();
+		canvas = new Canvas();
+
+		mBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+
+		// Rect rect = new Rect(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+
+		canvas.drawBitmap(mBitmap, 0, 0, null);
+
+		this.onDraw(canvas);
+
 	}
 
 	public void addDrawingPath(DrawingPath drawingPath) {
-		thread.setActualiser();
-		thread.addDrawingPath(drawingPath);
+		canvas = mSurfaceHolder.lockCanvas(null);
+		// canvas.drawColor(0xFFFFFFFF);ca efface tout
+		mDrawingPaths.add(drawingPath);
+		// mBitmap.eraseColor(Color.WHITE);
+		canvas.drawPath(drawingPath.path, drawingPath.paint);
+		// Rect rect = new Rect(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
 
+		canvas.drawBitmap(mBitmap, 0, 0, null);
+		this.onDraw(canvas);
+		mSurfaceHolder.unlockCanvasAndPost(canvas);
 	}
 
 	public void addDrawingPoint(DrawingPoint drawingPoint) {
-		thread.setActualiser();
-		thread.addDrawingPoint(drawingPoint);
+		mDrawingPoints.add(drawingPoint);
 
-	}
-
-	public void resetImage() {
-		thread.reset();
-	}
-
-	// public void addDrawing(DrawingPath drawingPath) {
-	// thread.addDrawing(drawingPath);
-	// }
-
-	class DrawThread extends Thread {
-		private DrawingSurface drawingSurface;
-		private SurfaceHolder mSurfaceHolder;
-		private List<DrawingPath> mDrawingPaths;
-		private List<DrawingPoint> mDrawingPoints;
-		private Canvas canvas;
-		private boolean actualiser = false;
-
-		public DrawThread(SurfaceHolder surfaceHolder,
-				DrawingSurface drawingSurface_) {
-			mSurfaceHolder = surfaceHolder;
-			drawingSurface = drawingSurface_;
-			mDrawingPaths = Collections
-					.synchronizedList(new ArrayList<DrawingPath>());
-			mDrawingPoints = Collections
-					.synchronizedList(new ArrayList<DrawingPoint>());
-			canvas = mSurfaceHolder.lockCanvas();
-			drawingSurface.onDraw(canvas);
-		}
-
-		public void setActualiser() {
-			actualiser = true;
-
-		}
-
-		public void addDrawingPath(DrawingPath drawingPath) {
-			mDrawingPaths.add(drawingPath);
-		}
-
-		public void addDrawingPoint(DrawingPoint drawingPoint) {
-			mDrawingPoints.add(drawingPoint);
-
-		}
-
-		public void reset() {
-			mDrawingPaths = Collections
-					.synchronizedList(new ArrayList<DrawingPath>());
-			mDrawingPoints = Collections
-					.synchronizedList(new ArrayList<DrawingPoint>());
-		}
-
-		// public void addDrawing(DrawingPath drawingPath) {
-		// canvas.drawPoint(drawingPath.x, drawingPath.y, drawingPath.paint);
-		// }
-
-		public void setRunning(boolean run) {
-			_run = run;
-		}
-
-		@Override
-		public void run() {
-			if (actualiser) {
-				Canvas canvas = null;
-			}
-			while (_run) {
-				if (actualiser) {
-					try {
-						canvas = mSurfaceHolder.lockCanvas(null);
-						if (mBitmap == null) {
-							mBitmap = Bitmap.createBitmap(1, 1,
-									Bitmap.Config.ARGB_8888);
-
-						}
-						canvas.drawColor(Color.WHITE);
-						synchronized (mDrawingPaths) {
-							Iterator i = mDrawingPaths.iterator();
-
-							while (i.hasNext()) {
-								final DrawingPath drawingPath = (DrawingPath) i
-										.next();
-
-								canvas.drawPath(drawingPath.path,
-										drawingPath.paint);
-
-							}
-							drawingSurface.onDraw(canvas);
-
-							canvas.drawBitmap(mBitmap, 0, 0, null);
-						}
-
-						synchronized (mDrawingPoints) {
-							Iterator i = mDrawingPoints.iterator();
-
-							while (i.hasNext()) {
-								final DrawingPoint drawingPoint = (DrawingPoint) i
-										.next();
-								// canvas.drawPoint(drawingPoint.x,
-								// drawingPoint.y,
-								// drawingPoint.paint);
-								int tailleOval = 5;
-								canvas.drawOval(new RectF(drawingPoint.x
-										- tailleOval, drawingPoint.y
-										- tailleOval, drawingPoint.x
-										+ tailleOval, drawingPoint.y
-										+ tailleOval), drawingPoint.paint);
-							}
-							drawingSurface.onDraw(canvas);
-
-							canvas.drawBitmap(mBitmap, 0, 0, null);
-						}
-					} finally {
-						mSurfaceHolder.unlockCanvasAndPost(canvas);
-						actualiser = false;
-					}
-				}
-			}
-
-		}
 	}
 
 	public Bitmap getBitmap() {
@@ -171,25 +83,25 @@ public class DrawingSurface extends SurfaceView implements
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		// TODO Auto-generated method stub
-		thread.setRunning(true);
-		thread.start();
+		// thread.setRunning(true);
+		// thread.start();
 
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		// TODO Auto-generated method stub
-		boolean retry = true;
-		thread.setRunning(false);
-		while (retry) {
-			try {
-				thread.join();
-				retry = false;
-			} catch (InterruptedException e) {
-				// we will try it again and again...
-			}
-		}
-
+		// boolean retry = true;
+		// thread.setRunning(false);
+		// while (retry) {
+		// try {
+		// thread.join();
+		// retry = false;
+		// } catch (InterruptedException e) {
+		// // we will try it again and again...
+		// }
+		// }
+		mSurfaceHolder.unlockCanvasAndPost(canvas);
 	}
 
 }

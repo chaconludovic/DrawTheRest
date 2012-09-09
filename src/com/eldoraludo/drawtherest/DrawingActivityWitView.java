@@ -11,8 +11,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Paint.Style;
 import android.graphics.Path;
+import android.graphics.Paint.Style;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,17 +23,8 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
 
-/**
- * http://www.tutorialforandroid.com/2010/11/drawing-with-canvas-in-android-
- * renewed.html
- * https://sites.google.com/site/tutorialsformobileprogramming/android
- * -tutorials/android-files
- * 
- * @author ludovic
- * 
- */
-public class DrawingActivity extends Activity implements OnTouchListener {
-	private DrawingSurface drawingSurface;
+public class DrawingActivityWitView extends Activity implements OnTouchListener {
+	private DrawView drawView;
 	private DrawingPath currentDrawingPath;
 	private DrawingPoint currentDrawingPoint;
 	private Paint currentPaint;
@@ -42,12 +33,12 @@ public class DrawingActivity extends Activity implements OnTouchListener {
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_draw_the_rest);
+		setContentView(R.layout.activity_draw_the_rest_with_view);
 		setCurrentPaint();
-		drawingSurface = (DrawingSurface) findViewById(R.id.drawingSurface);
+		drawView = (DrawView) findViewById(R.id.drawView);
 
-		drawingSurface.setOnTouchListener(this);
-	
+		drawView.setOnTouchListener(this);
+
 		final Button colorBlueBtn = (Button) findViewById(R.id.colorBlueBtn);
 		colorBlueBtn.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -113,13 +104,13 @@ public class DrawingActivity extends Activity implements OnTouchListener {
 			} else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
 				currentDrawingPath.path.lineTo(motionEvent.getX(),
 						motionEvent.getY());
-				drawingSurface.addDrawingPath(currentDrawingPath);
+				drawView.addDrawingPath(currentDrawingPath);
 				Log.i("DrawingActivity - onTouch ACTION_MOVE",
 						motionEvent.getX() + " " + motionEvent.getY());
 			} else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
 				currentDrawingPath.path.lineTo(motionEvent.getX(),
 						motionEvent.getY());
-				drawingSurface.addDrawingPath(currentDrawingPath);
+				drawView.addDrawingPath(currentDrawingPath);
 				Log.i("DrawingActivity - onTouch ACTION_UP", motionEvent.getX()
 						+ " " + motionEvent.getY());
 			}
@@ -134,7 +125,7 @@ public class DrawingActivity extends Activity implements OnTouchListener {
 
 				Log.i("DrawingActivity - onTouch ACTION_DOWN",
 						motionEvent.getX() + " " + motionEvent.getY());
-				drawingSurface.addDrawingPoint(currentDrawingPoint);
+			//	drawView.addDrawingPoint(currentDrawingPoint);
 
 			}
 		}
@@ -204,8 +195,8 @@ public class DrawingActivity extends Activity implements OnTouchListener {
 					alertDialog.show();
 				}
 			};
-			new ExportBitmapToFile(this, saveHandler,
-					drawingSurface.getBitmap()).execute();
+			// new ExportBitmapToFile(this, saveHandler,
+			// drawView.getBitmap()).execute();
 			break;
 		}
 	}
