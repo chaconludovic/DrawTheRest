@@ -1,6 +1,7 @@
 package com.eldoraludo.drawtherest;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import android.app.Activity;
@@ -9,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -29,8 +31,9 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 	private DrawingPath currentDrawingPath;
 	private DrawingPoint currentDrawingPoint;
 	private Paint currentPaint;
-	private static File APP_FILE_PATH = new File("/sdcard/external_sd/Temp");
 	private int stylePen = 0;
+	private static final String EXTERNAL_SD_TEMP_PATH = "external_sd/Temp";
+	private static final String EXTERNAL_SD_TEMP_MY_AWESOME_DRAWING_PNG = "myAwesomeDrawing.png";
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -81,6 +84,13 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 		restaurer.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				actionButton(restaurer);
+			}
+		});
+
+		final Button recharger = (Button) findViewById(R.id.recharger);
+		recharger.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				actionButton(recharger);
 			}
 		});
 
@@ -210,10 +220,15 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 		case R.id.restaurer:
 			drawView.restaurer();
 			break;
+		case R.id.recharger:
+			Bitmap recharger = recharger();
+			drawView.restaurer(recharger);
+			break;
 		}
 	}
 
 	private class ExportBitmapToFile extends AsyncTask<Intent, Void, Boolean> {
+
 		private Context mContext;
 		private Handler mHandler;
 		private Bitmap nBitmap;
@@ -228,11 +243,12 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 		@Override
 		protected Boolean doInBackground(Intent... arg0) {
 			try {
-				if (!APP_FILE_PATH.exists()) {
-					APP_FILE_PATH.mkdirs();
+				if (!new File(EXTERNAL_SD_TEMP_PATH).exists()) {
+					new File(EXTERNAL_SD_TEMP_PATH).mkdirs();
 				}
 				File file = new File(Environment.getExternalStorageDirectory()
-						.toString(), "external_sd/Temp/myAwesomeDrawing.png");
+						.toString(), EXTERNAL_SD_TEMP_PATH + "/"
+						+ EXTERNAL_SD_TEMP_MY_AWESOME_DRAWING_PNG);
 				FileOutputStream out = new FileOutputStream(file);
 				nBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
 				out.flush();
@@ -251,5 +267,58 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 				mHandler.sendEmptyMessage(1);
 			}
 		}
+	}
+
+	public boolean isSdReadable() {
+
+		boolean mExternalStorageAvailable = false;
+		String state = Environment.getExternalStorageState();
+
+		if (Environment.MEDIA_MOUNTED.equals(state)) {
+			// We can read and write the media
+			mExternalStorageAvailable = true;
+			Log.i("isSdReadable", "External storage card is readable.");
+		} else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+			// We can only read the media
+			Log.i("isSdReadable", "External storage card is readable.");
+			mExternalStorageAvailable = true;
+		} else {
+			// Something else is wrong. It may be one of many other
+			// states, but all we need to know is we can neither read nor write
+			mExternalStorageAvailable = false;
+		}
+
+		return mExternalStorageAvailable;
+	}
+
+	public Bitmap recharger() {
+
+		String fullPath = Environment.getExternalStorageDirectory()
+				.getAbsolutePath() + "/" + EXTERNAL_SD_TEMP_PATH;
+		Bitmap thumbnail = null;
+
+		// Look for the file on the external storage
+		try {
+			if (isSdReadable() == true) {
+				thumbnail = BitmapFactory.decodeFile(fullPath + "/"
+						+ EXTERNAL_SD_TEMP_MY_AWESOME_DRAWING_PNG);
+			}
+		} catch (Exception e) {
+			Log.e("getThumbnail() on external storage", e.getMessage());
+		}
+
+		// If no file on external storage, look in internal storage
+		if (thumbnail == null) {
+			try {
+
+				File filePath = getBaseContext().getFileStreamPath(
+						EXTERNAL_SD_TEMP_MY_AWESOME_DRAWING_PNG);
+				FileInputStream fi = new FileInputStream(filePath);
+				thumbnail = BitmapFactory.decodeStream(fi);
+			} catch (Exception ex) {
+				Log.e("getThumbnail() on internal storage", ex.getMessage());
+			}
+		}
+		return thumbnail;
 	}
 }

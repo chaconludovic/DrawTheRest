@@ -9,7 +9,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Environment;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -23,12 +25,18 @@ import android.view.View;
  * 
  */
 public class DrawView extends View {
+
 	Paint paint = new Paint();
 	DrawingPath drawingPath;
 	DrawingPoint drawingPoint;
 	private Bitmap bitmap;
+
 	private Canvas canvas;
 	private Buffer buffer;
+
+	private static final String ETAT_DRAWING = "DRAWING";
+	private static final String ETAT_RESTAURATION_BITMAP = "RESTAURATION_BITMAP";
+	private String etat = ETAT_DRAWING;
 
 	public DrawView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -50,19 +58,26 @@ public class DrawView extends View {
 
 	@Override
 	public void onDraw(Canvas c) {
-		if (drawingPath != null) {
-			canvas.drawPath(drawingPath.path, drawingPath.paint);
+		if (etat.equals(ETAT_DRAWING)) {
+			if (drawingPath != null) {
+				canvas.drawPath(drawingPath.path, drawingPath.paint);
+			}
+			if (drawingPoint != null) {
+				// canvas.drawPoint(drawingPoint.x, drawingPoint.y,
+				// drawingPoint.paint);
+				int tailleOval = 8;
+				canvas.drawOval(new RectF(drawingPoint.x - tailleOval,
+						drawingPoint.y - tailleOval, drawingPoint.x
+								+ tailleOval, drawingPoint.y + tailleOval),
+						drawingPoint.paint);
+			}
+			canvas.drawBitmap(this.bitmap, 0, 0, null);
+			c.drawBitmap(this.bitmap, 0, 0, null);
+		} else if (etat.equals(ETAT_RESTAURATION_BITMAP)) {
+			canvas.drawBitmap(this.bitmap, 0, 0, null);
+			c.drawBitmap(this.bitmap, 0, 0, null);
+			this.etat = ETAT_DRAWING;
 		}
-		if (drawingPoint != null) {
-			// canvas.drawPoint(drawingPoint.x, drawingPoint.y,
-			// drawingPoint.paint);
-			int tailleOval = 8;
-			canvas.drawOval(new RectF(drawingPoint.x - tailleOval,
-					drawingPoint.y - tailleOval, drawingPoint.x + tailleOval,
-					drawingPoint.y + tailleOval), drawingPoint.paint);
-		}
-		canvas.drawBitmap(bitmap, 0, 0, null);
-		c.drawBitmap(bitmap, 0, 0, null);
 	}
 
 	public void addDrawingPath(DrawingPath currentDrawingPath) {
@@ -101,17 +116,40 @@ public class DrawView extends View {
 	}
 
 	public void restaurer() {
-		if (bitmap != null) {
-			bitmap.recycle();
+		if (this.bitmap != null) {
+			this.bitmap.recycle();
 		}
 		canvas = new Canvas();
-		bitmap = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(),
-				Bitmap.Config.ARGB_8888);
-		bitmap.copyPixelsFromBuffer(buffer);
-		canvas.setBitmap(bitmap);
+		this.bitmap = Bitmap.createBitmap(getMeasuredWidth(),
+				getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+		this.bitmap.copyPixelsFromBuffer(buffer);
+		canvas.setBitmap(this.bitmap);
 		drawingPath = null;
 		drawingPoint = null;
 		this.invalidate();
 
+	}
+
+	public void restaurer(Bitmap bitmapToRestaure) {
+		// // draw the preserved image, scaling it to a thumbnail first
+		// Bitmap createScaledBitmap =
+		// Bitmap.createScaledBitmap(bitmapToRestaure,
+		// getMeasuredWidth(), getMeasuredHeight(), true);
+		this.etat = ETAT_RESTAURATION_BITMAP;
+		// if (this.bitmap != null) {
+		// this.bitmap.recycle();
+		// }
+		// this.bitmap = Bitmap.createBitmap(bitmapToRestaure, 0, 0,
+		// bitmapToRestaure.getWidth(), bitmapToRestaure.getHeight(),
+		// null, true);
+		this.bitmap = Bitmap
+				.createScaledBitmap(bitmapToRestaure,
+						bitmapToRestaure.getWidth(),
+						bitmapToRestaure.getHeight(), true);
+
+		Log.i("**************** azerty **************",
+				String.valueOf(this.bitmap.isMutable()));
+		// TODO PROBLEME ON NE PEUT PLUS MODIFIER APRES LE DESSIN
+		this.invalidate();
 	}
 }
