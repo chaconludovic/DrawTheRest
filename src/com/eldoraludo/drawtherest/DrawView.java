@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.os.Environment;
 import android.util.AttributeSet;
@@ -35,8 +36,9 @@ public class DrawView extends View {
 	private Buffer buffer;
 
 	private static final String ETAT_DRAWING = "DRAWING";
+	private static final String ETAT_DRAW_LINE = "ETAT_DRAW_LINE";
 	private static final String ETAT_RESTAURATION_BITMAP = "RESTAURATION_BITMAP";
-	private String etat = ETAT_DRAWING;
+	private String etat = ETAT_DRAW_LINE;
 
 	public DrawView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -77,6 +79,20 @@ public class DrawView extends View {
 			canvas.drawBitmap(this.bitmap, 0, 0, null);
 			c.drawBitmap(this.bitmap, 0, 0, null);
 			this.etat = ETAT_DRAWING;
+		} else if (etat.equals(ETAT_DRAW_LINE)) {
+			Path path = new Path();
+			path.moveTo(0, 3 * getMeasuredHeight() / 4);
+			path.lineTo(getMeasuredWidth(), 3 * getMeasuredHeight() / 4);
+			Paint paint = new Paint();
+			paint.setDither(true);
+			paint.setColor(Color.YELLOW);
+			paint.setStyle(Paint.Style.STROKE);
+			paint.setStrokeJoin(Paint.Join.ROUND);
+			paint.setStrokeCap(Paint.Cap.ROUND);
+			paint.setStrokeWidth(5);
+			canvas.drawPath(path, paint);
+			c.drawBitmap(this.bitmap, 0, 0, null);
+			this.etat = ETAT_DRAWING;
 		}
 	}
 
@@ -112,6 +128,7 @@ public class DrawView extends View {
 		bitmap.copyPixelsToBuffer(buffer);
 		drawingPath = null;
 		drawingPoint = null;
+		this.etat = ETAT_DRAW_LINE;
 		this.invalidate();
 	}
 
