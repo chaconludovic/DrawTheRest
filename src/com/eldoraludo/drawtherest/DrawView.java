@@ -164,9 +164,20 @@ public class DrawView extends View {
 						bitmapToRestaure.getWidth(),
 						bitmapToRestaure.getHeight(), true);
 
-		Log.i("**************** azerty **************",
-				String.valueOf(this.bitmap.isMutable()));
+		Log.i("**************** est mutable **************", "est mutable "
+				+ String.valueOf(this.bitmap.isMutable()));
 		// TODO PROBLEME ON NE PEUT PLUS MODIFIER APRES LE DESSIN
 		this.invalidate();
+	}
+
+	public void saveBitMAp() {
+		int[] pixels = new int[bitmap.getHeight() * bitmap.getWidth()];
+
+		bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(),
+				bitmap.getHeight());
+		Log.i("**************** pixel **************", "pixel " + pixels);
+
+		//Bitmap.copyPixelsFromBuffer()
+		
 	}
 }

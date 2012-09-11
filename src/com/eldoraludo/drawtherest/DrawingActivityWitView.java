@@ -25,6 +25,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class DrawingActivityWitView extends Activity implements OnTouchListener {
 	private DrawView drawView;
@@ -34,11 +35,23 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 	private int stylePen = 0;
 	private static final String EXTERNAL_SD_TEMP_PATH = "external_sd/Temp";
 	private static final String EXTERNAL_SD_TEMP_MY_AWESOME_DRAWING_PNG = "myAwesomeDrawing.png";
+	private int nombreDeJoueur;
+	private int numeroJoueurCourant;
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		Bundle bundle = getIntent().getExtras();
+		nombreDeJoueur = Integer.valueOf(bundle.getString("nombreDeJoueur"));
+		numeroJoueurCourant = 1;
+
 		setContentView(R.layout.activity_draw_the_rest_with_view);
 		setCurrentPaint();
+
+		final TextView joueurLb = (TextView) findViewById(R.id.joueurLb);
+		joueurLb.setText("Joueur " + numeroJoueurCourant + " sur "
+				+ nombreDeJoueur);
+
 		drawView = (DrawView) findViewById(R.id.drawView);
 
 		drawView.setOnTouchListener(this);
@@ -93,7 +106,12 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 				actionButton(recharger);
 			}
 		});
-
+		final Button sauvegarder = (Button) findViewById(R.id.sauvegarder);
+		sauvegarder.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				actionButton(sauvegarder);
+			}
+		});
 	}
 
 	private void setCurrentPaint() {
@@ -196,6 +214,9 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 			Log.i("DrawingActivity - onClick", "Green");
 			break;
 		case R.id.envoyer:
+			drawView.saveBitMAp();
+			break;
+		case R.id.sauvegarder:
 			final Activity currentActivity = this;
 			Handler saveHandler = new Handler() {
 				@Override
