@@ -38,13 +38,12 @@ public class DrawView extends View {
 	private static final String ETAT_DRAWING = "DRAWING";
 	private static final String ETAT_DRAW_LINE = "ETAT_DRAW_LINE";
 	private static final String ETAT_RESTAURATION_BITMAP = "RESTAURATION_BITMAP";
+	private static final String ETAT_JOUEUR_SUIVANT = "ETAT_JOUEUR_SUIVANT";
+
 	private String etat = ETAT_DRAW_LINE;
 	private byte[] tabByteImageComplete;
 
 	private byte[] tabBytePartiDuBas;
-
-	Rect src;
-	Rect dst;
 
 	public DrawView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -52,8 +51,7 @@ public class DrawView extends View {
 		// canvas = new Canvas();
 		// bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
 		// canvas.setBitmap(bitmap);
-		src = new Rect(0, 0, getMeasuredWidth(), getMeasuredHeight());
-		dst = new Rect(0, 0, getMeasuredWidth(), getMeasuredHeight());
+
 	}
 
 	@Override
@@ -84,27 +82,48 @@ public class DrawView extends View {
 			canvas.drawBitmap(this.bitmap, 0, 0, null);
 			c.drawBitmap(this.bitmap, 0, 0, null);
 		} else if (etat.equals(ETAT_RESTAURATION_BITMAP)) {
-
-			// canvas.drawBitmap(this.bitmap, src, dst, null);
-
 			canvas.drawBitmap(this.bitmap, 0, 0, null);
 			c.drawBitmap(this.bitmap, 0, 0, null);
 			this.etat = ETAT_DRAWING;
+		} else if (etat.equals(ETAT_JOUEUR_SUIVANT)) {
+			canvas.drawBitmap(this.bitmap, 0, 0, null);
+			drawPathEnBas(canvas);
+			drawPathEnHaut(canvas);
+			c.drawBitmap(this.bitmap, 0, 0, null);
+			this.etat = ETAT_DRAWING;
 		} else if (etat.equals(ETAT_DRAW_LINE)) {
-			Path path = new Path();
-			path.moveTo(0, 3 * getMeasuredHeight() / 4);
-			path.lineTo(getMeasuredWidth(), 3 * getMeasuredHeight() / 4);
-			Paint paint = new Paint();
-			paint.setDither(true);
-			paint.setColor(Color.YELLOW);
-			paint.setStyle(Paint.Style.STROKE);
-			paint.setStrokeJoin(Paint.Join.ROUND);
-			paint.setStrokeCap(Paint.Cap.ROUND);
-			paint.setStrokeWidth(5);
-			canvas.drawPath(path, paint);
+			drawPathEnBas(canvas);
 			c.drawBitmap(this.bitmap, 0, 0, null);
 			this.etat = ETAT_DRAWING;
 		}
+	}
+
+	private void drawPathEnBas(Canvas canvas_) {
+		Path path = new Path();
+		path.moveTo(0, 3 * getMeasuredHeight() / 4);
+		path.lineTo(getMeasuredWidth(), 3 * getMeasuredHeight() / 4);
+		Paint paint = new Paint();
+		paint.setDither(true);
+		paint.setColor(Color.YELLOW);
+		paint.setStyle(Paint.Style.STROKE);
+		paint.setStrokeJoin(Paint.Join.ROUND);
+		paint.setStrokeCap(Paint.Cap.ROUND);
+		paint.setStrokeWidth(5);
+		canvas_.drawPath(path, paint);
+	}
+
+	private void drawPathEnHaut(Canvas canvas_) {
+		Path path = new Path();
+		path.moveTo(0, 1 * getMeasuredHeight() / 4);
+		path.lineTo(getMeasuredWidth(), 1 * getMeasuredHeight() / 4);
+		Paint paint = new Paint();
+		paint.setDither(true);
+		paint.setColor(Color.YELLOW);
+		paint.setStyle(Paint.Style.STROKE);
+		paint.setStrokeJoin(Paint.Join.ROUND);
+		paint.setStrokeCap(Paint.Cap.ROUND);
+		paint.setStrokeWidth(5);
+		canvas_.drawPath(path, paint);
 	}
 
 	public void addDrawingPath(DrawingPath currentDrawingPath) {
@@ -143,7 +162,7 @@ public class DrawView extends View {
 		this.invalidate();
 	}
 
-	public void saveBitMAp() {
+	public void sauvegarderImage() {
 		// sauvegarde de l'image complete
 		tabByteImageComplete = sauvegardeBitmap(bitmap);
 		// sauvegarde de la partie du bas
@@ -189,19 +208,16 @@ public class DrawView extends View {
 	public void restaurer() {
 		byte[] tabByteVierge = getTabByteVierge(bitmap.getRowBytes()
 				* bitmap.getHeight());
-
 		byte[] tabByte = fusionneTabs(tabByteVierge, tabBytePartiDuBas);
-
 		ByteBuffer buffer_ = ByteBuffer.wrap(tabByte);
 		bitmap = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(),
 				Bitmap.Config.ARGB_8888);
 		bitmap.copyPixelsFromBuffer(buffer_);
-
 		canvas = new Canvas();
 		canvas.setBitmap(bitmap);
 		drawingPath = null;
 		drawingPoint = null;
-		this.etat = ETAT_RESTAURATION_BITMAP;
+		this.etat = ETAT_JOUEUR_SUIVANT;
 		this.invalidate();
 	}
 
@@ -226,6 +242,11 @@ public class DrawView extends View {
 				+ String.valueOf(this.bitmap.isMutable()));
 		// TODO PROBLEME ON NE PEUT PLUS MODIFIER APRES LE DESSIN
 		this.invalidate();
+	}
+
+	public void envoyer() {
+		sauvegarderImage();
+		restaurer();
 	}
 
 }

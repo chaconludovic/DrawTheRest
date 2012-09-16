@@ -218,7 +218,7 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 			Log.i("DrawingActivity - onClick", "Green");
 			break;
 		case R.id.envoyer:
-			drawView.saveBitMAp();
+			drawView.envoyer();
 			break;
 		case R.id.sauvegarder:
 			final Activity currentActivity = this;
