@@ -5,10 +5,12 @@ import java.nio.ByteBuffer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -37,6 +39,12 @@ public class DrawView extends View {
 	private static final String ETAT_DRAW_LINE = "ETAT_DRAW_LINE";
 	private static final String ETAT_RESTAURATION_BITMAP = "RESTAURATION_BITMAP";
 	private String etat = ETAT_DRAW_LINE;
+	private byte[] tabByteImageComplete;
+
+	private byte[] tabBytePartiDuBas;
+
+	Rect src;
+	Rect dst;
 
 	public DrawView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -44,6 +52,8 @@ public class DrawView extends View {
 		// canvas = new Canvas();
 		// bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
 		// canvas.setBitmap(bitmap);
+		src = new Rect(0, 0, getMeasuredWidth(), getMeasuredHeight());
+		dst = new Rect(0, 0, getMeasuredWidth(), getMeasuredHeight());
 	}
 
 	@Override
@@ -74,6 +84,9 @@ public class DrawView extends View {
 			canvas.drawBitmap(this.bitmap, 0, 0, null);
 			c.drawBitmap(this.bitmap, 0, 0, null);
 		} else if (etat.equals(ETAT_RESTAURATION_BITMAP)) {
+
+			// canvas.drawBitmap(this.bitmap, src, dst, null);
+
 			canvas.drawBitmap(this.bitmap, 0, 0, null);
 			c.drawBitmap(this.bitmap, 0, 0, null);
 			this.etat = ETAT_DRAWING;
@@ -130,27 +143,60 @@ public class DrawView extends View {
 		this.invalidate();
 	}
 
-	byte[] bdata;
-
 	public void saveBitMAp() {
-		canvas = new Canvas();
-		// int size = bitmap.getHeight() * bitmap.getRowBytes();
-		int size = bitmap.getRowBytes() * bitmap.getHeight();
-		ByteBuffer buffer = ByteBuffer.allocate(size * 4);
-		bitmap.copyPixelsToBuffer(buffer);
-		bdata = buffer.array();
+		// sauvegarde de l'image complete
+		tabByteImageComplete = sauvegardeBitmap(bitmap);
+		// sauvegarde de la partie du bas
+		tabBytePartiDuBas = sauvegardePartieDuBasDeBitmap(bitmap);
+
 		this.destroy();
 
 	}
 
+	private byte[] sauvegardeBitmap(Bitmap bitmap_) {
+		byte[] tabByteImageComplete = null;
+		int size = bitmap_.getRowBytes() * bitmap_.getHeight();
+		ByteBuffer buffer = ByteBuffer.allocate(size * 4);
+		bitmap_.copyPixelsToBuffer(buffer);
+		tabByteImageComplete = buffer.array();
+		return tabByteImageComplete;
+	}
+
+	private byte[] sauvegardePartieDuBasDeBitmap(Bitmap bitmap_) {
+		Bitmap bitmapSousLigneJaune = Bitmap.createBitmap(bitmap_, 0,
+				bitmap_.getHeight() * 3 / 4, bitmap_.getWidth(),
+				bitmap_.getHeight() - bitmap_.getHeight() * 3 / 4);
+		int size = bitmapSousLigneJaune.getRowBytes()
+				* bitmapSousLigneJaune.getHeight();
+		ByteBuffer buffer = ByteBuffer.allocate(size * 4);
+		bitmapSousLigneJaune.copyPixelsToBuffer(buffer);
+		return buffer.array();
+
+	}
+
+	public byte[] getTabByteVierge(int size) {
+
+		ByteBuffer buffer = ByteBuffer.allocate(size * 4);
+		return buffer.array();
+	}
+
+	public byte[] fusionneTabs(byte[] tab1, byte[] tab2) {
+		ByteBuffer bufferAvecPartieBas = ByteBuffer.wrap(tab1);
+		bufferAvecPartieBas = ByteBuffer.wrap(tab2);
+		return bufferAvecPartieBas.array();
+	}
+
 	public void restaurer() {
-		if (bitmap != null) {
-			bitmap.recycle();
-		}
-		ByteBuffer buffer_ = ByteBuffer.wrap(bdata);
+		byte[] tabByteVierge = getTabByteVierge(bitmap.getRowBytes()
+				* bitmap.getHeight());
+
+		byte[] tabByte = fusionneTabs(tabByteVierge, tabBytePartiDuBas);
+
+		ByteBuffer buffer_ = ByteBuffer.wrap(tabByte);
 		bitmap = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(),
 				Bitmap.Config.ARGB_8888);
 		bitmap.copyPixelsFromBuffer(buffer_);
+
 		canvas = new Canvas();
 		canvas.setBitmap(bitmap);
 		drawingPath = null;
@@ -158,37 +204,6 @@ public class DrawView extends View {
 		this.etat = ETAT_RESTAURATION_BITMAP;
 		this.invalidate();
 	}
-
-	// int[] pixels;
-	// int saveW;
-	// int saveH;
-	//
-	// public void saveBitMAp() {
-	// pixels = new int[bitmap.getHeight() * bitmap.getWidth()];
-	// saveW = bitmap.getWidth();
-	// saveH = bitmap.getHeight();
-	// bitmap.getPixels(pixels, 0, saveW, 0, 0, saveW, saveH);
-	// Log.i("**************** pixel **************", "pixel " + pixels);
-	//
-	// // Bitmap.copyPixelsFromBuffer()
-	//
-	// }
-
-//	public void restaurer1() {
-//		if (this.bitmap != null) {
-//			this.bitmap.recycle();
-//		}
-//		canvas = new Canvas();
-//		this.bitmap = Bitmap.createBitmap(getMeasuredWidth(),
-//				getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-//		this.bitmap.copyPixelsFromBuffer(buffer);
-//		canvas.setBitmap(this.bitmap);
-//		drawingPath = null;
-//		drawingPoint = null;
-//		this.invalidate();
-//		// bitmap.setPixels(pixels, 0, saveW, 0, 0, saveW, saveH);
-//
-//	}
 
 	public void restaurer(Bitmap bitmapToRestaure) {
 		// // draw the preserved image, scaling it to a thumbnail first
