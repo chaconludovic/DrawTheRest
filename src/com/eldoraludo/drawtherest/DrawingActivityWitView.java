@@ -35,14 +35,18 @@ public class DrawingActivityWitView extends Activity implements OnTouchListener 
 	private int stylePen = 0;
 	private static final String EXTERNAL_SD_TEMP_PATH = "external_sd/Temp";
 	private static final String EXTERNAL_SD_TEMP_MY_AWESOME_DRAWING_PNG = "myAwesomeDrawing.png";
-	private int nombreDeJoueur;
+	private int nombreDeJoueur = 0;
 	private int numeroJoueurCourant;
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		Bundle bundle = getIntent().getExtras();
-		nombreDeJoueur = Integer.valueOf(bundle.getString("nombreDeJoueur"));
+		try {
+			nombreDeJoueur = Integer
+					.valueOf(bundle.getString("nombreDeJoueur"));
+		} catch (Throwable t) {
+		}
 		numeroJoueurCourant = 1;
 
 		setContentView(R.layout.activity_draw_the_rest_with_view);

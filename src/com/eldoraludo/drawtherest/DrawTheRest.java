@@ -19,8 +19,11 @@ public class DrawTheRest extends Activity {
 			public void onClick(View v) {
 				// Intent drawIntent = new Intent(this, DrawingActivity.class);
 				// startActivity(drawIntent);
+				// Intent drawIntent = new Intent(DrawTheRest.this,
+				// SettingsActivity.class);
+				// startActivity(drawIntent);
 				Intent drawIntent = new Intent(DrawTheRest.this,
-						SettingsActivity.class);
+						DrawingActivityWitView.class);
 				startActivity(drawIntent);
 			}
 		});

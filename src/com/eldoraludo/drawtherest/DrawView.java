@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
-import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -33,7 +32,6 @@ public class DrawView extends View {
 	private Bitmap bitmap;
 
 	private Canvas canvas;
-	private Buffer buffer;
 
 	private static final String ETAT_DRAWING = "DRAWING";
 	private static final String ETAT_DRAW_LINE = "ETAT_DRAW_LINE";
@@ -124,28 +122,73 @@ public class DrawView extends View {
 				Bitmap.Config.ARGB_8888);
 		canvas.setBitmap(bitmap);
 		int size = bitmap.getHeight() * bitmap.getRowBytes();
-		buffer = ByteBuffer.allocateDirect(size);
-		bitmap.copyPixelsToBuffer(buffer);
+		Buffer buffer_ = ByteBuffer.allocateDirect(size * 4);
+		bitmap.copyPixelsToBuffer(buffer_);
 		drawingPath = null;
 		drawingPoint = null;
 		this.etat = ETAT_DRAW_LINE;
 		this.invalidate();
 	}
 
-	public void restaurer() {
-		if (this.bitmap != null) {
-			this.bitmap.recycle();
-		}
+	byte[] bdata;
+
+	public void saveBitMAp() {
 		canvas = new Canvas();
-		this.bitmap = Bitmap.createBitmap(getMeasuredWidth(),
-				getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-		this.bitmap.copyPixelsFromBuffer(buffer);
-		canvas.setBitmap(this.bitmap);
-		drawingPath = null;
-		drawingPoint = null;
-		this.invalidate();
+		// int size = bitmap.getHeight() * bitmap.getRowBytes();
+		int size = bitmap.getRowBytes() * bitmap.getHeight();
+		ByteBuffer buffer = ByteBuffer.allocate(size * 4);
+		bitmap.copyPixelsToBuffer(buffer);
+		bdata = buffer.array();
+		this.destroy();
 
 	}
+
+	public void restaurer() {
+		if (bitmap != null) {
+			bitmap.recycle();
+		}
+		ByteBuffer buffer_ = ByteBuffer.wrap(bdata);
+		bitmap = Bitmap.createBitmap(getMeasuredWidth(), getMeasuredHeight(),
+				Bitmap.Config.ARGB_8888);
+		bitmap.copyPixelsFromBuffer(buffer_);
+		canvas = new Canvas();
+		canvas.setBitmap(bitmap);
+		drawingPath = null;
+		drawingPoint = null;
+		this.etat = ETAT_RESTAURATION_BITMAP;
+		this.invalidate();
+	}
+
+	// int[] pixels;
+	// int saveW;
+	// int saveH;
+	//
+	// public void saveBitMAp() {
+	// pixels = new int[bitmap.getHeight() * bitmap.getWidth()];
+	// saveW = bitmap.getWidth();
+	// saveH = bitmap.getHeight();
+	// bitmap.getPixels(pixels, 0, saveW, 0, 0, saveW, saveH);
+	// Log.i("**************** pixel **************", "pixel " + pixels);
+	//
+	// // Bitmap.copyPixelsFromBuffer()
+	//
+	// }
+
+//	public void restaurer1() {
+//		if (this.bitmap != null) {
+//			this.bitmap.recycle();
+//		}
+//		canvas = new Canvas();
+//		this.bitmap = Bitmap.createBitmap(getMeasuredWidth(),
+//				getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+//		this.bitmap.copyPixelsFromBuffer(buffer);
+//		canvas.setBitmap(this.bitmap);
+//		drawingPath = null;
+//		drawingPoint = null;
+//		this.invalidate();
+//		// bitmap.setPixels(pixels, 0, saveW, 0, 0, saveW, saveH);
+//
+//	}
 
 	public void restaurer(Bitmap bitmapToRestaure) {
 		// // draw the preserved image, scaling it to a thumbnail first
@@ -170,14 +213,4 @@ public class DrawView extends View {
 		this.invalidate();
 	}
 
-	public void saveBitMAp() {
-		int[] pixels = new int[bitmap.getHeight() * bitmap.getWidth()];
-
-		bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(),
-				bitmap.getHeight());
-		Log.i("**************** pixel **************", "pixel " + pixels);
-
-		//Bitmap.copyPixelsFromBuffer()
-		
-	}
 }
